@@ -9,27 +9,21 @@ import {
   AppRegistry,
   StyleSheet,
   Text,
-  View
+  View, NativeModules, DeviceEventEmitter
 } from 'react-native';
 
-import AMapLocation from 'js/modules/AMapLocation'
+// import AMapLocation from 'js/modules/AMapLocation'
+let AMap = NativeModules.AMapLocationModule;
 
 export default class MyMapProject extends Component {
 
     componentDidMount() {
-        this.listener = AMapLocation.addEventListener(this._onLocationChanged);    // 注册监听
-        AMapLocation.startLocation(); // 开启定位
+        AMap.logd("componentDidMount");
+        AMap.doSearchQuery("高德");
     }
     componentWillUnmount() {
-        AMapLocation.destory();
-        this.listener.clear();
-    }
 
-    _onLocationChanged = (data)=> {
-        if (data && data.result) {
-            console.log(data.address);
-        }
-    };
+    }
 
   render() {
     return (
