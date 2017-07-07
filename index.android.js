@@ -12,17 +12,41 @@ import {
   View, NativeModules, DeviceEventEmitter
 } from 'react-native';
 
-// import AMapLocation from 'js/modules/AMapLocation'
 let AMap = NativeModules.AMapLocationModule;
 
 export default class MyMapProject extends Component {
 
+    constructor(props){
+        super(props);
+        this.state={
+            successInfo:"",
+            errorInfo:""
+        }
+    }
+
     componentDidMount() {
-        AMap.logd("componentDidMount");
-        AMap.doSearchQuery("高德");
+        // AMap.doSearchQuery("高德", (index, poiResult)=>{
+        //     console.log(index + "===" + poiResult);
+        // }, (i, poiItem)=>{
+        //     console.log(index + "===" + poiItem);
+        // });
+        _toast("componentDidMount");
+        AMap.startLocation((locationType, latitude, longitude, accuracy, time)=>{
+            this.setState({
+                successInfo:locationType + "; " + latitude + "; " + longitude + "; " + accuracy + "; " + time
+            })
+            // console.log(locationType + "; " + latitude + "; " + longitude + "; " + accuracy + "; " + time);
+        },
+            (error)=>{
+                _toast(error);
+            })
     }
     componentWillUnmount() {
+        AMap.stopLocation();
+    }
 
+    _toast = (text) => {
+        AMap.toast(text);
     }
 
   render() {
@@ -32,11 +56,13 @@ export default class MyMapProject extends Component {
           Welcome to React Native!
         </Text>
         <Text style={styles.instructions}>
-          To get started, edit index.android.js
+
         </Text>
         <Text style={styles.instructions}>
-          Double tap R on your keyboard to reload,{'\n'}
-          Shake or press menu button for dev menu
+            {
+                `${this.state.successInfo == ""?"":this.state.successInfo}
+                ${this.state.errorInfo==""?"":this.state.errorInfo}`
+            }
         </Text>
       </View>
     );
