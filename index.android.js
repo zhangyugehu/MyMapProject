@@ -24,22 +24,33 @@ export default class MyMapProject extends Component {
         }
     }
 
+    render() {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.welcome} onPress={()=>{this._onPressed();}}>
+                    获取定位信息
+                </Text>
+                <Text style={styles.instructions}>
+                    {
+                        `${this.state.successInfo == ""?"":this.state.successInfo}
+                ${this.state.errorInfo==""?"":this.state.errorInfo}`
+                    }
+                </Text>
+            </View>
+        );
+    }
+
     componentDidMount() {
-        // AMap.doSearchQuery("高德", (index, poiResult)=>{
-        //     console.log(index + "===" + poiResult);
-        // }, (i, poiItem)=>{
-        //     console.log(index + "===" + poiItem);
-        // });
-        _toast("componentDidMount");
-        AMap.startLocation((locationType, latitude, longitude, accuracy, time)=>{
+        this._toast("componentDidMount");
+        AMap.setSuccessListener((info)=>{
             this.setState({
-                successInfo:locationType + "; " + latitude + "; " + longitude + "; " + accuracy + "; " + time
+                successInfo:info
             })
-            // console.log(locationType + "; " + latitude + "; " + longitude + "; " + accuracy + "; " + time);
-        },
-            (error)=>{
-                _toast(error);
-            })
+        });
+
+        AMap.setErrorListener((error)=>{
+            this._toast(error);
+        });
     }
     componentWillUnmount() {
         AMap.stopLocation();
@@ -48,25 +59,11 @@ export default class MyMapProject extends Component {
     _toast = (text) => {
         AMap.toast(text);
     }
+    _onPressed() {
+        this._toast("startLocation");
+        AMap.startLocation();
+    }
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-
-        </Text>
-        <Text style={styles.instructions}>
-            {
-                `${this.state.successInfo == ""?"":this.state.successInfo}
-                ${this.state.errorInfo==""?"":this.state.errorInfo}`
-            }
-        </Text>
-      </View>
-    );
-  }
 
 
 }
@@ -84,7 +81,7 @@ const styles = StyleSheet.create({
     margin: 10,
   },
   instructions: {
-    textAlign: 'center',
+    textAlign: 'left',
     color: '#333333',
     marginBottom: 5,
   },

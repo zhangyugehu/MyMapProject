@@ -102,6 +102,10 @@ android {
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
+
+        manifestPlaceholders = [
+                AMAP_KEY:"91393eb8b341e9d9d1b9010afc95546d"
+        ]
     }
     splits {
         abi {
