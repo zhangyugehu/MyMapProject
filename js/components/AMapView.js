@@ -1,14 +1,15 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
 import {
     NativeModules,
     requireNativeComponent,
-    findNodeHandle,
+    findNodeHandle
 
 } from 'react-native';
 const AMapModule = NativeModules.AMapModule;
 const MapView = requireNativeComponent('RCTAMapView', AMapView);
 
 export default class AMapView extends Component {
+    static defaultProps = {};
 
     render() {
         return (
@@ -19,10 +20,10 @@ export default class AMapView extends Component {
     }
 
     startLocationNative = () => {
-        AMapModule.startLocation(findNodeHandle(this))
+        AMapModule.setMyLocationEnabled(findNodeHandle(this));
     }
 
     setCameraNative =() =>{
-        AMapModule.setCamera(findNodeHandle(this), 39.90403, 116.407525)
+        // AMapModule.setCamera(findNodeHandle(this), 39.90403, 116.407525)
     }
 }

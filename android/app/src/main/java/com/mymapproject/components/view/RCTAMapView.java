@@ -55,6 +55,7 @@ public class RCTAMapView extends FrameLayout {
         mMapView.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
         mAmap = mMapView.getMap();
+        mAmap.setMyLocationEnabled(true);
     }
 
     @Override

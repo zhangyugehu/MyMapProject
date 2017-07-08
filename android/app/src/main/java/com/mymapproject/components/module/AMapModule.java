@@ -1,6 +1,7 @@
 package com.mymapproject.components.module;
 
 import android.support.annotation.Nullable;
+import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -43,13 +44,6 @@ public class AMapModule extends ReactContextBaseJavaModule {
         return NAME;
     }
 
-    /**
-     * 定位当前位置
-     */
-    @ReactMethod public void startLocation(){
-        initLocation();
-    }
-
     private void initLocation() {
         mClient = new AMapLocationClient(mContext.getApplicationContext());
         AMapLocationClientOption mOption = new AMapLocationClientOption();
@@ -70,14 +64,19 @@ public class AMapModule extends ReactContextBaseJavaModule {
                     //解析定位结果
 //                    aMapLocation.getAoiName();
 //                    String LocationData = Utils.getLocationStr(loc);
-                    WritableMap params = Arguments.createMap();
-                    params.putString("AMapLocation", aMapLocation.getAoiName());
-                    sendEvent(mContext, "onAMAPLocationResult", params);
+//                    WritableMap params = Arguments.createMap();
+//                    params.putString("AMapLocation", aMapLocation.getAoiName());
+//                    sendEvent(mContext, "onAMAPLocationResult", params);
+                    toast(aMapLocation.getAoiName());
                 } else {
-
+                    toast("aMapLocation is null.");
                 }
             }
         });
+    }
+
+    private void toast(String text){
+        Toast.makeText(mContext, text, Toast.LENGTH_SHORT).show();
     }
 
     private void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {
@@ -86,16 +85,30 @@ public class AMapModule extends ReactContextBaseJavaModule {
     }
 
     private RCTAMapView findViewByTag(int tag){
-        return ((RCTAMapView) mContext.getCurrentActivity().findViewById(tag));
+        RCTAMapView mapView = (RCTAMapView) mContext.getCurrentActivity().findViewById(tag);
+        toast("mapView " + mapView + "  tag " + tag);
+        return mapView;
     }
 
-    @ReactMethod public void startLocation(int tag){
+    /**
+     * 定位当前位置
+     */
+    @ReactMethod public void startLocation(){
+        if(mClient == null) {
+            initLocation();
+        }
+        mClient.startLocation();
+    }
+
+    @ReactMethod public void setMyLocationEnabled(int tag){
         RCTAMapView mapView = findViewByTag(tag);
+        if(mapView == null){ return; }
         mapView.setMyLocationEnabled(true);
     }
 
-    @ReactMethod public void setCamera(int tag, long lng, long lat){
+    @ReactMethod public void setCamera(int tag, double lng, double lat){
         RCTAMapView mapView = findViewByTag(tag);
+        if(mapView == null){ return; }
         LatLng latLng = new LatLng(lng, lat);
         mapView.setCamera(latLng);
         mapView.addMarkersToMap(latLng);
