@@ -1,6 +1,8 @@
 package com.mymapproject.components.view;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,7 +16,13 @@ import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.UiSettings;
 import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.LatLng;
+import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
+import com.amap.api.maps2d.model.PolylineOptions;
+import com.mymapproject.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.amap.api.maps2d.AMapOptions.ZOOM_POSITION_RIGHT_BUTTOM;
 
@@ -30,6 +38,8 @@ public class RCTAMapView extends FrameLayout {
     private AMap mAmap;
     private float mZoomLevel;
 
+    private List<Marker> mMarkerList;
+
     public RCTAMapView(@NonNull Context context) {
         this(context, null);
     }
@@ -40,19 +50,11 @@ public class RCTAMapView extends FrameLayout {
 
     public RCTAMapView(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        mMarkerList = new ArrayList<>();
         mMapView = new MapView(context);
         mMapView.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
         mAmap = mMapView.getMap();
-        UiSettings uiSettings = mAmap.getUiSettings();
-        uiSettings.setZoomControlsEnabled(false);//显示缩放按钮
-        //缩放按钮  右边界中部：ZOOM_POSITION_RIGHT_CENTER 右下：ZOOM_POSITION_RIGHT_BUTTOM。
-        uiSettings.setZoomPosition(ZOOM_POSITION_RIGHT_BUTTOM);
-        //Logo的位置 左下：LOGO_POSITION_BOTTOM_LEFT 底部居中：LOGO_POSITION_BOTTOM_CENTER 右下：LOGO_POSITION_BOTTOM_RIGHT
-        uiSettings.setLogoPosition(ZOOM_POSITION_RIGHT_BUTTOM);
-        uiSettings.setCompassEnabled(false);//指南针
-        uiSettings.setZoomGesturesEnabled(true);//手势缩放
-        uiSettings.setScaleControlsEnabled(true);//比例尺
     }
 
     @Override
@@ -71,12 +73,36 @@ public class RCTAMapView extends FrameLayout {
         mAmap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, mZoomLevel));
     }
 
-    public void addMarkersToMap(LatLng latLng) {
-        MarkerOptions markerOptions = new MarkerOptions()
-                .icon(BitmapDescriptorFactory
-                .defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                .position(latLng)
-                .draggable(true);
-        mAmap.addMarker(markerOptions);
+    public void addLine(LatLng start, LatLng end){
+
+        // 绘制曲线
+        mAmap.addPolyline((new PolylineOptions())
+                .add(start, end)
+                .geodesic(true).color(Color.RED)
+        );
+    }
+
+    public void addMarkersToMap(LatLng location) {
+        //绘制marker
+        Marker marker = mAmap.addMarker(new MarkerOptions()
+                .position(location)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                .draggable(true));
+
+        mMarkerList.add(marker);
+    }
+
+    public void removeAllMarkers(){
+        for(Marker marker : mMarkerList){
+//            mAmap.
+        }
+    }
+
+    public AMap getAMap() {
+        return mAmap;
+    }
+
+    public void setMyLocationEnabled(boolean b) {
+        mAmap.setMyLocationEnabled(b);
     }
 }

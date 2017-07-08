@@ -1,28 +1,36 @@
 package com.mymapproject.components.module;
 
+import android.support.annotation.Nullable;
+
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps2d.model.LatLng;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.mymapproject.components.view.RCTAMapView;
+import com.mymapproject.components.view.manager.AMapViewManager;
 
 /**
+ *
  * @author zhangyugehu
  * @version V1.0
  * @data 2017/07/07
  */
 
-public class AMapModule extends ReactContextBaseJavaModule implements AMapLocationListener {
+public class AMapModule extends ReactContextBaseJavaModule {
 
     private final String NAME = "AMapModule";
     private ReactApplicationContext mContext;
 
-    private RCTAMapView mMapView;
+//    private AMapViewManager mMapManager;
     private AMapLocationClient mClient;
 
     public AMapModule(ReactApplicationContext reactContext) {
@@ -35,67 +43,62 @@ public class AMapModule extends ReactContextBaseJavaModule implements AMapLocati
         return NAME;
     }
 
-    private void setAMapView(int tag) {
-        if (mMapView == null) {
-            mMapView = ((RCTAMapView) mContext.getCurrentActivity().findViewById(tag));
-        }
-    }
-
     /**
      * 定位当前位置
      */
     @ReactMethod public void startLocation(){
-        if (mClient == null) {
-            mClient = new AMapLocationClient(mContext);
-            AMapLocationClientOption mLocationOption = new AMapLocationClientOption();
-            //设置定位监听
-            mClient.setLocationListener(this);
-            //设置为高精度定位模式
-            mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
-            mLocationOption.setOnceLocation(true);
-//            mLocationOption.setOnceLocationLatest(true);
-            //定位缓存策略
-            mLocationOption.setLocationCacheEnable(true);
-//            mLocationOption.setInterval(10);
-//            mLocationOption.setInterval(3*60*1000);
-            //设置定位参数
-            mClient.setLocationOption(mLocationOption);
-
-            // 此方法为每隔固定时间会发起一次定位请求，为了减少电量消耗或网络流量消耗，
-            // 注意设置合适的定位时间的间隔（最小间隔支持为2000ms），并且在合适时间调用stopLocation()方法来取消定位请求
-            // 在定位结束后，在合适的生命周期调用onDestroy()方法
-            // 在单次定位情况下，定位无论成功与否，都无需调用stopLocation()方法移除请求，定位sdk内部会移除
-
-        }
-        mClient.startLocation();
+        initLocation();
     }
 
-    @ReactMethod public void setCamera(ReadableMap map){
-        LatLng latLng = new LatLng(map.getDouble("lng"), map.getDouble("lat"));
-        mMapView.setCamera(latLng);
-        mMapView.addMarkersToMap(latLng);
+    private void initLocation() {
+        mClient = new AMapLocationClient(mContext.getApplicationContext());
+        AMapLocationClientOption mOption = new AMapLocationClientOption();
+        mOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);//可选，设置定位模式，可选的模式有高精度、仅设备、仅网络。默认为高精度模式
+        mOption.setGpsFirst(false);//可选，设置是否gps优先，只在高精度模式下有效。默认关闭
+//        mOption.setHttpTimeOut(TIMEOUT);//可选，设置网络请求超时时间。默认为30秒。在仅设备模式下无效
+//        mOption.setInterval(STRINTERVAL);//可选，设置定位间隔。默认为2秒
+        mOption.setNeedAddress(true);//可选，设置是否返回逆地理地址信息。默认是true
+        mOption.setOnceLocation(false);//可选，设置是否单次定位。默认是false
+        mOption.setOnceLocationLatest(true);//可选，设置是否等待wifi刷新，默认为false.如果设置为true,会自动变为单次定位，持续定位时不要使用
+        AMapLocationClientOption.setLocationProtocol(AMapLocationClientOption.AMapLocationProtocol.HTTP);//可选， 设置网络请求的协议。可选HTTP或者HTTPS。默认为HTTP
+        mOption.setSensorEnable(false);//可选，设置是否使用传感器。默认是false
+        mClient.setLocationOption(mOption);
+        mClient.setLocationListener(new AMapLocationListener() {
+            @Override
+            public void onLocationChanged(AMapLocation aMapLocation) {
+                if (aMapLocation != null) {
+                    //解析定位结果
+//                    aMapLocation.getAoiName();
+//                    String LocationData = Utils.getLocationStr(loc);
+                    WritableMap params = Arguments.createMap();
+                    params.putString("AMapLocation", aMapLocation.getAoiName());
+                    sendEvent(mContext, "onAMAPLocationResult", params);
+                } else {
+
+                }
+            }
+        });
     }
 
-    /**
-     * 在地图上添加marker
-     */
-    @ReactMethod public void addMarkersToMap(double lng, double lat) {
+    private void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {
+        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(eventName, params);
+    }
+
+    private RCTAMapView findViewByTag(int tag){
+        return ((RCTAMapView) mContext.getCurrentActivity().findViewById(tag));
+    }
+
+    @ReactMethod public void startLocation(int tag){
+        RCTAMapView mapView = findViewByTag(tag);
+        mapView.setMyLocationEnabled(true);
+    }
+
+    @ReactMethod public void setCamera(int tag, long lng, long lat){
+        RCTAMapView mapView = findViewByTag(tag);
         LatLng latLng = new LatLng(lng, lat);
-        mMapView.addMarkersToMap(latLng);
-    }
-    /**
-     * 清空地图上所有已经标注的marker
-     */
-    @ReactMethod public void clearAllMarker(int tag) {
-//        setAMapView(tag);
-//        MarkerUtil.clearMarker(mMapView.getAmap());
+        mapView.setCamera(latLng);
+        mapView.addMarkersToMap(latLng);
     }
 
-    /**
-     * mClient.setLocationListener(this)
-     * @param aMapLocation
-     */
-    @Override public void onLocationChanged(AMapLocation aMapLocation) {
-
-    }
 }
